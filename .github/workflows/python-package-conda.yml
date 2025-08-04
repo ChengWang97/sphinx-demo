@@ -1,34 +1,37 @@
-name: Python Package using Conda
+name: Deploy Documentation
 
-on: [push]
+on:
+  push:
+    branches: [ main ]  # 触发分支
 
 jobs:
-  build-linux:
-    runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 5
+  build-and-deploy:
+    runs-on: ubuntu-latest  # GitHub 提供的虚拟机环境
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v3
+    # 步骤1: 检出代码
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # 步骤2: 设置 Python 环境
+    - name: Set up Python
+      uses: actions/setup-python@v4
       with:
-        python-version: '3.10'
-    - name: Add conda to system path
+        python-version: '3.x'  # 使用最新Python3
+
+    # 步骤3: 安装依赖
+    - name   名字: Install dependencies
       run: |
-        # $CONDA is an environment variable pointing to the root of the miniconda directory
-        echo $CONDA/bin >> $GITHUB_PATH
-    - name: Install dependencies
-      run: |
-        conda env update --file environment.yml --name base
-    - name: Lint with flake8
-      run: |
-        conda install flake8
-        # stop the build if there are Python syntax errors or undefined names如果存在 Python 语法错误或未定义的名称，则停止构建。
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide# exit-zero 将所有错误视为警告。GitHub 编辑器的宽度为 127 个字符
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest   - 名称：使用 pytest 进行测试
-      run: |   运行:|
-        conda install pytest
-        pytest
+        pip install sphinx sphinx-rtd-theme
+
+    # 步骤4: 构建文档
+    - name   名字: Build HTML
+      run   运行: |
+        sphinx-build -b html docs/ public/  # 源目录→输出目录
+
+    # 步骤5: 部署到 GitHub Pages
+    - name   名字: Deploy to GitHub Pages
+      uses   使用: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./public  # 部署目录
